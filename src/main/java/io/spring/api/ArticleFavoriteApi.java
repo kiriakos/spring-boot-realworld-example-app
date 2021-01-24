@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "articles/{slug}/favorite")
@@ -36,7 +37,7 @@ public class ArticleFavoriteApi {
     }
 
     @PostMapping
-    public ResponseEntity favoriteArticle(@PathVariable("slug") String slug,
+    public Map<String, Object>  favoriteArticle(@PathVariable("slug") String slug,
                                           @AuthenticationPrincipal User user) {
         Article article = getArticle(slug);
         ArticleFavorite articleFavorite = new ArticleFavorite(article.getId(), user.getId());
@@ -45,7 +46,7 @@ public class ArticleFavoriteApi {
     }
 
     @DeleteMapping
-    public ResponseEntity unfavoriteArticle(@PathVariable("slug") String slug,
+    public Map<String, Object>  unfavoriteArticle(@PathVariable("slug") String slug,
                                             @AuthenticationPrincipal User user) {
         Article article = getArticle(slug);
         articleFavoriteRepository.find(article.getId(), user.getId()).ifPresent(favorite -> {
@@ -54,10 +55,10 @@ public class ArticleFavoriteApi {
         return responseArticleData(articleQueryService.findBySlug(slug, user).get());
     }
 
-    private ResponseEntity<HashMap<String, Object>> responseArticleData(final ArticleData articleData) {
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
+    private HashMap<String, Object> responseArticleData(final ArticleData articleData) {
+        return new HashMap<String, Object>() {{
             put("article", articleData);
-        }});
+        }};
     }
 
     private Article getArticle(String slug) {

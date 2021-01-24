@@ -82,11 +82,11 @@ public class UsersApi {
     }
 
     @RequestMapping(path = "/users/login", method = POST)
-    public ResponseEntity userLogin(@Valid @RequestBody LoginParam loginParam, BindingResult bindingResult) {
+    public Map<String, Object> userLogin(@Valid @RequestBody LoginParam loginParam, BindingResult bindingResult) {
         Optional<User> optional = userRepository.findByEmail(loginParam.getEmail());
         if (optional.isPresent() && encryptService.check(loginParam.getPassword(), optional.get().getPassword())) {
             UserData userData = userQueryService.findById(optional.get().getId()).get();
-            return ResponseEntity.ok(userResponse(new UserWithToken(userData, jwtService.toToken(optional.get()))));
+            return userResponse(new UserWithToken(userData, jwtService.toToken(optional.get())));
         } else {
             bindingResult.rejectValue("password", "INVALID", "invalid email or password");
             throw new InvalidRequestException(bindingResult);

@@ -63,13 +63,13 @@ public class CommentsApi {
     }
 
     @GetMapping
-    public ResponseEntity getComments(@PathVariable("slug") String slug,
+    public Map<String, Object> getComments(@PathVariable("slug") String slug,
                                       @AuthenticationPrincipal User user) {
         Article article = findArticle(slug);
         List<CommentData> comments = commentQueryService.findByArticleId(article.getId(), user);
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
+        return new HashMap<String, Object>() {{
             put("comments", comments);
-        }});
+        }};
     }
 
     @RequestMapping(path = "{id}", method = RequestMethod.DELETE)

@@ -39,16 +39,16 @@ public class CurrentUserApi {
     }
 
     @GetMapping
-    public ResponseEntity currentUser(@AuthenticationPrincipal User currentUser,
+    public Map<String, Object> currentUser(@AuthenticationPrincipal User currentUser,
                                       @RequestHeader(value = "Authorization") String authorization) {
         UserData userData = userQueryService.findById(currentUser.getId()).get();
-        return ResponseEntity.ok(userResponse(
+        return userResponse(
             new UserWithToken(userData, authorization.split(" ")[1])
-        ));
+        );
     }
 
     @PutMapping
-    public ResponseEntity updateProfile(@AuthenticationPrincipal User currentUser,
+    public Map<String, Object> updateProfile(@AuthenticationPrincipal User currentUser,
                                         @RequestHeader("Authorization") String token,
                                         @Valid @RequestBody UpdateUserParam updateUserParam,
                                         BindingResult bindingResult) {
@@ -65,9 +65,9 @@ public class CurrentUserApi {
             updateUserParam.getImage());
         userRepository.save(currentUser);
         UserData userData = userQueryService.findById(currentUser.getId()).get();
-        return ResponseEntity.ok(userResponse(
+        return userResponse(
             new UserWithToken(userData, token.split(" ")[1])
-        ));
+        );
     }
 
     private void checkUniquenessOfUsernameAndEmail(User currentUser, UpdateUserParam updateUserParam, BindingResult bindingResult) {

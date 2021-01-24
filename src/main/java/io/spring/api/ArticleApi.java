@@ -28,27 +28,31 @@ import java.util.Map;
 @RestController
 @RequestMapping(path = "/articles/{slug}")
 public class ArticleApi {
+	
     private ArticleQueryService articleQueryService;
     private ArticleRepository articleRepository;
 
     @Autowired
     public ArticleApi(ArticleQueryService articleQueryService, ArticleRepository articleRepository) {
+    	
         this.articleQueryService = articleQueryService;
         this.articleRepository = articleRepository;
     }
 
     @GetMapping
-    public ResponseEntity<?> article(@PathVariable("slug") String slug,
+    public Map<String, Object> article(@PathVariable("slug") String slug,
                                      @AuthenticationPrincipal User user) {
+    	
         return articleQueryService.findBySlug(slug, user)
-            .map(articleData -> ResponseEntity.ok(articleResponse(articleData)))
+            .map(articleData -> articleResponse(articleData))
             .orElseThrow(ResourceNotFoundException::new);
     }
 
     @PutMapping
-    public ResponseEntity<?> updateArticle(@PathVariable("slug") String slug,
+    public Map<String, Object> updateArticle(@PathVariable("slug") String slug,
                                            @AuthenticationPrincipal User user,
                                            @Valid @RequestBody UpdateArticleParam updateArticleParam) {
+    	
         return articleRepository.findBySlug(slug).map(article -> {
             if (!AuthorizationService.canWriteArticle(user, article)) {
                 throw new NoAuthorizationException();
@@ -58,13 +62,15 @@ public class ArticleApi {
                 updateArticleParam.getDescription(),
                 updateArticleParam.getBody());
             articleRepository.save(article);
-            return ResponseEntity.ok(articleResponse(articleQueryService.findBySlug(slug, user).get()));
+            
+            return articleResponse(articleQueryService.findBySlug(slug, user).get());
         }).orElseThrow(ResourceNotFoundException::new);
     }
 
     @DeleteMapping
     public ResponseEntity deleteArticle(@PathVariable("slug") String slug,
                                         @AuthenticationPrincipal User user) {
+    	
         return articleRepository.findBySlug(slug).map(article -> {
             if (!AuthorizationService.canWriteArticle(user, article)) {
                 throw new NoAuthorizationException();
@@ -75,6 +81,7 @@ public class ArticleApi {
     }
 
     private Map<String, Object> articleResponse(ArticleData articleData) {
+    	
         return new HashMap<String, Object>() {{
             put("article", articleData);
         }};

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -32,7 +33,7 @@ public class ProfileApi {
     }
 
     @GetMapping
-    public ResponseEntity getProfile(@PathVariable("username") String username,
+    public Map<String, Object> getProfile(@PathVariable("username") String username,
                                      @AuthenticationPrincipal User user) {
         return profileQueryService.findByUsername(username, user)
             .map(this::profileResponse)
@@ -40,7 +41,7 @@ public class ProfileApi {
     }
 
     @PostMapping(path = "follow")
-    public ResponseEntity follow(@PathVariable("username") String username,
+    public Map<String, Object> follow(@PathVariable("username") String username,
                                  @AuthenticationPrincipal User user) {
         return userRepository.findByUsername(username).map(target -> {
             FollowRelation followRelation = new FollowRelation(user.getId(), target.getId());
@@ -50,7 +51,7 @@ public class ProfileApi {
     }
 
     @DeleteMapping(path = "follow")
-    public ResponseEntity unfollow(@PathVariable("username") String username,
+    public Map<String, Object> unfollow(@PathVariable("username") String username,
                                    @AuthenticationPrincipal User user) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isPresent()) {
@@ -65,9 +66,9 @@ public class ProfileApi {
         }
     }
 
-    private ResponseEntity profileResponse(ProfileData profile) {
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
+    private Map<String, Object> profileResponse(ProfileData profile) {
+        return new HashMap<String, Object>() {{
             put("profile", profile);
-        }});
+        }};
     }
 }

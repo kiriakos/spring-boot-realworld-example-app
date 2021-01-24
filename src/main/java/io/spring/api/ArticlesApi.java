@@ -3,6 +3,7 @@ package io.spring.api;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.spring.api.exception.InvalidRequestException;
 import io.spring.application.Page;
+import io.spring.application.data.ArticleDataList;
 import io.spring.application.ArticleQueryService;
 import io.spring.core.article.Article;
 import io.spring.core.article.ArticleRepository;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/articles")
@@ -37,7 +39,7 @@ public class ArticlesApi {
     }
 
     @PostMapping
-    public ResponseEntity createArticle(@Valid @RequestBody NewArticleParam newArticleParam,
+    public Map<String, Object> createArticle(@Valid @RequestBody NewArticleParam newArticleParam,
                                         BindingResult bindingResult,
                                         @AuthenticationPrincipal User user) {
         if (bindingResult.hasErrors()) {
@@ -56,26 +58,27 @@ public class ArticlesApi {
             newArticleParam.getTagList(),
             user.getId());
         articleRepository.save(article);
-        return ResponseEntity.ok(new HashMap<String, Object>() {{
+        
+        return new HashMap<String, Object>() {{
             put("article", articleQueryService.findById(article.getId(), user).get());
-        }});
+        }};
     }
 
     @GetMapping(path = "feed")
-    public ResponseEntity getFeed(@RequestParam(value = "offset", defaultValue = "0") int offset,
+    public ArticleDataList getFeed(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                   @RequestParam(value = "limit", defaultValue = "20") int limit,
                                   @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(articleQueryService.findUserFeed(user, new Page(offset, limit)));
+        return articleQueryService.findUserFeed(user, new Page(offset, limit));
     }
 
     @GetMapping
-    public ResponseEntity getArticles(@RequestParam(value = "offset", defaultValue = "0") int offset,
+    public ArticleDataList getArticles(@RequestParam(value = "offset", defaultValue = "0") int offset,
                                       @RequestParam(value = "limit", defaultValue = "20") int limit,
                                       @RequestParam(value = "tag", required = false) String tag,
                                       @RequestParam(value = "favorited", required = false) String favoritedBy,
                                       @RequestParam(value = "author", required = false) String author,
                                       @AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(articleQueryService.findRecentArticles(tag, author, favoritedBy, new Page(offset, limit), user));
+        return articleQueryService.findRecentArticles(tag, author, favoritedBy, new Page(offset, limit), user);
     }
 }
 
