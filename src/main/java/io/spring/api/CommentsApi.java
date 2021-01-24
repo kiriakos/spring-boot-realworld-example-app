@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import io.spring.api.exception.InvalidRequestException;
 import io.spring.api.exception.NoAuthorizationException;
 import io.spring.api.exception.ResourceNotFoundException;
+import io.spring.api.infrastructure.CommentListData;
+import io.spring.api.infrastructure.CommentRootData;
+import io.spring.api.infrastructure.Response;
 import io.spring.core.service.AuthorizationService;
 import io.spring.application.data.CommentData;
 import io.spring.application.CommentQueryService;
@@ -49,7 +52,7 @@ public class CommentsApi {
     }
 
     @PostMapping
-    public ResponseEntity<?> createComment(@PathVariable("slug") String slug,
+    public ResponseEntity<CommentRootData> createComment(@PathVariable("slug") String slug,
                                                      @AuthenticationPrincipal User user,
                                                      @Valid @RequestBody NewCommentParam newCommentParam,
                                                      BindingResult bindingResult) {
@@ -59,17 +62,15 @@ public class CommentsApi {
         }
         Comment comment = new Comment(newCommentParam.getBody(), user.getId(), article.getId());
         commentRepository.save(comment);
-        return ResponseEntity.status(201).body(commentResponse(commentQueryService.findById(comment.getId(), user).get()));
+        return ResponseEntity.status(201).body(Response.of(commentQueryService.findById(comment.getId(), user).get()));
     }
 
     @GetMapping
-    public Map<String, Object> getComments(@PathVariable("slug") String slug,
+    public CommentListData getComments(@PathVariable("slug") String slug,
                                       @AuthenticationPrincipal User user) {
         Article article = findArticle(slug);
         List<CommentData> comments = commentQueryService.findByArticleId(article.getId(), user);
-        return new HashMap<String, Object>() {{
-            put("comments", comments);
-        }};
+        return Response.of(comments);
     }
 
     @RequestMapping(path = "{id}", method = RequestMethod.DELETE)
@@ -89,12 +90,12 @@ public class CommentsApi {
     private Article findArticle(String slug) {
         return articleRepository.findBySlug(slug).map(article -> article).orElseThrow(ResourceNotFoundException::new);
     }
-
-    private Map<String, Object> commentResponse(CommentData commentData) {
-        return new HashMap<String, Object>() {{
-            put("comment", commentData);
-        }};
-    }
+//
+//    private Map<String, Object> commentResponse(CommentData commentData) {
+//        return new HashMap<String, Object>() {{
+//            put("comment", commentData);
+//        }};
+//    }
 }
 
 @Getter

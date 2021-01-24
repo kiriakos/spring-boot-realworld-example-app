@@ -4,10 +4,11 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import io.spring.api.exception.NoAuthorizationException;
 import io.spring.api.exception.ResourceNotFoundException;
 import io.spring.core.service.AuthorizationService;
-import io.spring.application.data.ArticleData;
 import io.spring.application.ArticleQueryService;
 import io.spring.core.article.ArticleRepository;
 import io.spring.core.user.User;
+import io.spring.api.infrastructure.ArticleRootData;
+import io.spring.api.infrastructure.Response;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/articles/{slug}")
@@ -40,20 +39,21 @@ public class ArticleApi {
     }
 
     @GetMapping
-    public Map<String, Object> article(@PathVariable("slug") String slug,
+    public ArticleRootData article(@PathVariable("slug") String slug,
                                      @AuthenticationPrincipal User user) {
     	
         return articleQueryService.findBySlug(slug, user)
-            .map(articleData -> articleResponse(articleData))
+            .map(articleData -> Response.of(articleData))
             .orElseThrow(ResourceNotFoundException::new);
     }
 
     @PutMapping
-    public Map<String, Object> updateArticle(@PathVariable("slug") String slug,
+    public ArticleRootData updateArticle(@PathVariable("slug") String slug,
                                            @AuthenticationPrincipal User user,
                                            @Valid @RequestBody UpdateArticleParam updateArticleParam) {
     	
         return articleRepository.findBySlug(slug).map(article -> {
+        	
             if (!AuthorizationService.canWriteArticle(user, article)) {
                 throw new NoAuthorizationException();
             }
@@ -63,7 +63,8 @@ public class ArticleApi {
                 updateArticleParam.getBody());
             articleRepository.save(article);
             
-            return articleResponse(articleQueryService.findBySlug(slug, user).get());
+            return Response.of(articleQueryService.findBySlug(slug, user).get());
+            
         }).orElseThrow(ResourceNotFoundException::new);
     }
 
@@ -78,13 +79,6 @@ public class ArticleApi {
             articleRepository.remove(article);
             return ResponseEntity.noContent().build();
         }).orElseThrow(ResourceNotFoundException::new);
-    }
-
-    private Map<String, Object> articleResponse(ArticleData articleData) {
-    	
-        return new HashMap<String, Object>() {{
-            put("article", articleData);
-        }};
     }
 }
 

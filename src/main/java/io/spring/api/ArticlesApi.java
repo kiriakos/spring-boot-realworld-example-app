@@ -2,6 +2,8 @@ package io.spring.api;
 
 import com.fasterxml.jackson.annotation.JsonRootName;
 import io.spring.api.exception.InvalidRequestException;
+import io.spring.api.infrastructure.ArticleRootData;
+import io.spring.api.infrastructure.Response;
 import io.spring.application.Page;
 import io.spring.application.data.ArticleDataList;
 import io.spring.application.ArticleQueryService;
@@ -39,7 +41,7 @@ public class ArticlesApi {
     }
 
     @PostMapping
-    public Map<String, Object> createArticle(@Valid @RequestBody NewArticleParam newArticleParam,
+    public ArticleRootData createArticle(@Valid @RequestBody NewArticleParam newArticleParam,
                                         BindingResult bindingResult,
                                         @AuthenticationPrincipal User user) {
         if (bindingResult.hasErrors()) {
@@ -59,9 +61,7 @@ public class ArticlesApi {
             user.getId());
         articleRepository.save(article);
         
-        return new HashMap<String, Object>() {{
-            put("article", articleQueryService.findById(article.getId(), user).get());
-        }};
+        return Response.of(articleQueryService.findById(article.getId(), user).get());
     }
 
     @GetMapping(path = "feed")
